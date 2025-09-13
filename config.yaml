@@ -1,0 +1,96 @@
+# Code Auto-Documenter Configuration
+# Configuration file for the CLI tool
+
+# Documentation style guide
+style_guide: google  # Options: google, numpy, sphinx, jsdoc
+
+# Output settings
+output:
+  format: markdown  # Options: markdown, html
+  directory: docs/
+  filename: project-documentation
+
+# Analysis settings
+analysis:
+  # Languages to analyze (empty = all supported)
+  languages: []
+  
+  # File patterns to ignore
+  ignore_patterns:
+    - "*.pyc"
+    - "*.class"
+    - "*.o"
+    - "*.so"
+    - "*.dll"
+    - "*.exe"
+    - ".DS_Store"
+    - "Thumbs.db"
+  
+  # Directories to ignore
+  ignore_directories:
+    - ".git"
+    - "__pycache__"
+    - "node_modules"
+    - ".vscode"
+    - ".idea"
+    - "dist"
+    - "build"
+    - "target"
+    - "bin"
+    - "obj"
+    - "venv"
+    - "env"
+
+# API settings
+api:
+  # Gemini API key (optional, can be set via environment variable)
+  gemini_key: ""
+  
+  # Request timeout in seconds
+  timeout: 120
+  
+  # Model configuration
+  model:
+    temperature: 0.2
+    max_tokens: 16384
+
+# Documentation templates
+templates:
+  # Custom prompt templates for different project types
+  python_web:
+    description: "FastAPI/Django web application"
+    prompt_suffix: "Focus on API endpoints, database models, and web-specific patterns."
+  
+  python_data:
+    description: "Data science/ML project"
+    prompt_suffix: "Emphasize data processing, model training, and analysis workflows."
+  
+  javascript_frontend:
+    description: "React/Vue frontend application"
+    prompt_suffix: "Focus on components, state management, and UI patterns."
+
+# Quality settings
+quality:
+  # Minimum documentation coverage percentage
+  min_coverage: 80
+  
+  # Enable hallucination checks
+  hallucination_checks: true
+  
+  # Enable code validation
+  code_validation: true
+
+# Git integration
+git:
+  # Enable Git hooks
+  enable_hooks: false
+  
+  # Pre-commit hook settings
+  pre_commit:
+    auto_update: true
+    check_coverage: true
+  
+  # CI/CD integration
+  ci:
+    github_actions: false
+    gitlab_ci: false
