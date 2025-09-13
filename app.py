@@ -16,8 +16,8 @@ app.config['SECRET_KEY'] = 'your-secret-key-here'
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size for folders
 
 # Gemini API Configuration
-GEMINI_API_KEY = "AIzaSyCOFOoppNQRakvBcKyKmWHEHpMBPODi9s4"
-GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+GEMINI_API_KEY = "AIzaSyAGFn61sg4_mCncJDTeMFF8-t-4oUEUCvk"
+GEMINI_API_URL = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
 
 # Supported file extensions
 SUPPORTED_EXTENSIONS = {
@@ -185,8 +185,8 @@ def call_gemini_api(prompt):
 
 def clean_markdown_to_html(text):
     """Convert markdown formatting to proper HTML"""
-    # Convert **text** to <strong>text</strong>
-    text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', text)
+    # Convert **text** to <strong>text</strong> (handle multiple occurrences)
+    text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', text, flags=re.DOTALL)
     
     # Convert *text* to <em>text</em> (but not inside code blocks)
     text = re.sub(r'(?<!`)\*([^*`]+)\*(?!`)', r'<em>\1</em>', text)
@@ -194,6 +194,7 @@ def clean_markdown_to_html(text):
     # Convert `code` to <code>code</code> (but not inside code blocks)
     text = re.sub(r'(?<!`)`([^`]+)`(?!`)', r'<code>\1</code>', text)
     
+    # Additional cleanup for common markdown patterns
     # Convert ### headings to proper HTML
     text = re.sub(r'^### (.*?)$', r'<h3>\1</h3>', text, flags=re.MULTILINE)
     text = re.sub(r'^## (.*?)$', r'<h2>\1</h2>', text, flags=re.MULTILINE)
@@ -466,6 +467,55 @@ def download_documentation():
             'success': True,
             'documentation': documentation,
             'filename': 'project-documentation.md'
+        })
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/chatbot', methods=['POST'])
+def chatbot():
+    """API endpoint for chatbot functionality"""
+    try:
+        data = request.get_json()
+        question = data.get('question', '').strip()
+        documentation = data.get('documentation', '')
+        
+        if not question:
+            return jsonify({'error': 'No question provided'}), 400
+        
+        if not documentation:
+            return jsonify({'error': 'No documentation context provided'}), 400
+        
+        # Create a prompt for the chatbot
+        chatbot_prompt = f"""
+You are an AI assistant helping developers understand their code project. Based on the following project documentation, please answer the user's question in a CONCISE and helpful way.
+
+Project Documentation:
+{documentation}
+
+User Question: {question}
+
+IMPORTANT INSTRUCTIONS:
+1. Keep your response SHORT and FOCUSED (maximum 3-4 sentences)
+2. Answer directly what the user asked
+3. If referencing code, mention specific function/class names
+4. Use HTML formatting: <strong>bold text</strong> and <em>italic text</em> (NOT markdown **text** or *text*)
+5. If the question is about usage, provide a brief example
+6. If troubleshooting, give a concise solution
+7. Be conversational but professional
+
+Format your response in clean HTML with proper tags like <p>, <strong>, <em>, <code>, <ul>, <li>.
+"""
+        
+        # Call Gemini API for chatbot response
+        response = call_gemini_api(chatbot_prompt)
+        
+        # Clean up any remaining markdown formatting in the response
+        response = clean_markdown_to_html(response)
+        
+        return jsonify({
+            'success': True,
+            'answer': response
         })
     
     except Exception as e:

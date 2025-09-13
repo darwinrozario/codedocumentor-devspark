@@ -55,6 +55,14 @@ LANGUAGE_EXTENSIONS = {
     'powershell': {'ps1'}
 }
 
+# Simple supported extensions set for compatibility with app.py
+SUPPORTED_EXTENSIONS = {
+    'js', 'py', 'java', 'cpp', 'c', 'html', 'css', 'php', 
+    'rb', 'go', 'rs', 'ts', 'jsx', 'tsx', 'vue', 'svelte',
+    'md', 'txt', 'json', 'xml', 'yaml', 'yml', 'toml', 'ini',
+    'sh', 'bat', 'ps1', 'sql', 'r', 'scala', 'kt', 'swift'
+}
+
 # Style guides for different languages
 STYLE_GUIDES = {
     'python': {
@@ -166,10 +174,8 @@ def clone_github_repository(repo_url: str) -> List[Dict[str, Any]]:
 def is_supported_file(filename: str) -> bool:
     """Check if file is supported"""
     ext = Path(filename).suffix[1:].lower()
-    supported_extensions = set()
-    for extensions in LANGUAGE_EXTENSIONS.values():
-        supported_extensions.update(extensions)
-    return ext in supported_extensions
+    # Check both the simple set and the language extensions
+    return ext in SUPPORTED_EXTENSIONS or any(ext in exts for exts in LANGUAGE_EXTENSIONS.values())
 
 class CodeAnalyzer:
     """Analyzes code structure using AST parsing"""
@@ -332,7 +338,8 @@ def allowed_file(filename):
     if '.' not in filename:
         return False
     ext = filename.rsplit('.', 1)[1].lower()
-    return any(ext in exts for exts in LANGUAGE_EXTENSIONS.values())
+    # Check both the simple set and the language extensions
+    return ext in SUPPORTED_EXTENSIONS or any(ext in exts for exts in LANGUAGE_EXTENSIONS.values())
 
 def should_ignore_path(path):
     """Check if path should be ignored"""
@@ -360,12 +367,20 @@ def extract_files_from_zip(zip_file):
                         if not content.strip():
                             continue
                         
-                        # Analyze the file
-                        if file_info.filename.endswith('.py'):
-                            analysis = analyzer.analyze_python_file(file_info.filename, content)
-                        elif file_info.filename.endswith(('.js', '.jsx', '.ts', '.tsx')):
-                            analysis = analyzer.analyze_javascript_file(file_info.filename, content)
-                        else:
+                        # Analyze the file (optional for compatibility)
+                        try:
+                            if file_info.filename.endswith('.py'):
+                                analysis = analyzer.analyze_python_file(file_info.filename, content)
+                            elif file_info.filename.endswith(('.js', '.jsx', '.ts', '.tsx')):
+                                analysis = analyzer.analyze_javascript_file(file_info.filename, content)
+                            else:
+                                analysis = {
+                                    'language': 'unknown',
+                                    'file_path': file_info.filename,
+                                    'line_count': len(content.splitlines())
+                                }
+                        except Exception as e:
+                            # Fallback to simple analysis if AST parsing fails
                             analysis = {
                                 'language': 'unknown',
                                 'file_path': file_info.filename,
@@ -523,15 +538,30 @@ def create_documentation_prompt(file_contents, style_guide='google'):
     if not file_contents:
         return "No valid files found to analyze."
     
-    # Group files by language
-    files_by_language = {}
-    for file_data in file_contents:
-        lang = file_data['analysis'].get('language', 'unknown')
-        if lang not in files_by_language:
-            files_by_language[lang] = []
-        files_by_language[lang].append(file_data)
+    # Check if files have analysis data (enhanced format) or simple format
+    has_analysis = any('analysis' in file_data for file_data in file_contents)
     
-    prompt = f"""Please analyze the following code files and generate comprehensive, well-structured documentation using HTML formatting (NOT markdown).
+    if has_analysis:
+        # Group files by language (enhanced format)
+        files_by_language = {}
+        for file_data in file_contents:
+            lang = file_data.get('analysis', {}).get('language', 'unknown')
+            if lang not in files_by_language:
+                files_by_language[lang] = []
+            files_by_language[lang].append(file_data)
+    else:
+        # Group files by directory (simple format from app.py)
+        files_by_dir = {}
+        for file_data in file_contents:
+            dir_path = str(Path(file_data['name']).parent)
+            if dir_path == '.':
+                dir_path = 'Root'
+            if dir_path not in files_by_dir:
+                files_by_dir[dir_path] = []
+            files_by_dir[dir_path].append(file_data)
+    
+    if has_analysis:
+        prompt = f"""Please analyze the following code files and generate comprehensive, well-structured documentation using HTML formatting (NOT markdown).
 
 The code has been analyzed using AST parsing to extract symbols, functions, classes, and dependencies. Use this information to create accurate documentation.
 
@@ -561,16 +591,44 @@ Here are the analyzed code files:
 ---
 
 """
+    else:
+        prompt = """Please analyze the following code files and generate comprehensive, well-structured documentation using HTML formatting (NOT markdown).
 
-    # Add files to prompt, organized by language
-    for language, files in files_by_language.items():
-        prompt += f"<h2>🔧 {language.upper()} Files</h2>\n\n"
-        
-        for file_data in files:
-            analysis = file_data['analysis']
-            prompt += f"<h3>📄 {file_data['name']}</h3>\n\n"
-            prompt += f"<strong>File Type</strong>: {file_data['extension'].upper()}\n"
-            prompt += f"<strong>Lines of Code</strong>: {analysis.get('line_count', 'Unknown')}\n\n"
+For each file, provide:
+
+1. <strong>Purpose and Overview</strong>: What the file does and its role in the project
+2. <strong>Key Functions/Classes</strong>: Main components with their purpose and functionality
+3. <strong>Dependencies</strong>: External libraries, modules, or frameworks used
+4. <strong>Usage Examples</strong>: How to use key functions/classes with code examples
+5. <strong>Code Comments</strong>: Explain complex logic, algorithms, and important decisions
+6. <strong>API Documentation</strong>: For functions, include parameters, return values, and exceptions
+
+Format the output in clean, professional HTML with:
+- Clear hierarchical headings (<h1>, <h2>, <h3>, <h4>)
+- Proper code blocks with syntax highlighting
+- Bold text for emphasis using <strong>text</strong> (NOT **text**)
+- Italic text using <em>text</em> (NOT *text*)
+- Clean spacing and organization
+- Tables where appropriate using <table>, <tr>, <th>, <td>
+- Lists using <ul> and <li> for better readability
+- Paragraphs wrapped in <p> tags
+
+Here are the code files to analyze:
+
+---
+
+"""
+
+    if has_analysis:
+        # Add files to prompt, organized by language
+        for language, files in files_by_language.items():
+            prompt += f"<h2>🔧 {language.upper()} Files</h2>\n\n"
+            
+            for file_data in files:
+                analysis = file_data['analysis']
+                prompt += f"<h3>📄 {file_data['name']}</h3>\n\n"
+                prompt += f"<strong>File Type</strong>: {file_data['extension'].upper()}\n"
+                prompt += f"<strong>Lines of Code</strong>: {analysis.get('line_count', 'Unknown')}\n\n"
             
             # Debug: Print analysis structure
             print(f"Analysis for {file_data['name']}: {type(analysis)}")
@@ -635,7 +693,17 @@ Here are the analyzed code files:
                     print(f"Error processing imports: {e}")
                     prompt += f"<strong>Dependencies</strong>: unknown\n\n"
             
-            prompt += f"<pre><code class=\"{file_data['extension']}\">{file_data['content']}</code></pre>\n\n---\n\n"
+                prompt += f"<pre><code class=\"{file_data['extension']}\">{file_data['content']}</code></pre>\n\n---\n\n"
+    else:
+        # Add files to prompt, organized by directory (simple format)
+        for dir_path, files in sorted(files_by_dir.items()):
+            if dir_path != 'Root':
+                prompt += f"<h2>📁 {dir_path}/</h2>\n\n"
+            
+            for file_data in files:
+                prompt += f"<h3>📄 {file_data['name']}</h3>\n\n"
+                prompt += f"<strong>File Type</strong>: {file_data['extension'].upper()}\n\n"
+                prompt += f"<pre><code class=\"{file_data['extension']}\">{file_data['content']}</code></pre>\n\n---\n\n"
 
     prompt += """
 
@@ -724,24 +792,33 @@ def generate_documentation():
                     try:
                         content = file.read().decode('utf-8')
                         if content.strip():  # Skip empty files
-                            analyzer = CodeAnalyzer()
-                            if filename.endswith('.py'):
-                                analysis = analyzer.analyze_python_file(filename, content)
-                            elif filename.endswith(('.js', '.jsx', '.ts', '.tsx')):
-                                analysis = analyzer.analyze_javascript_file(filename, content)
-                            else:
-                                analysis = {
-                                    'language': 'unknown',
-                                    'file_path': filename,
-                                    'line_count': len(content.splitlines())
-                                }
-                            
-                            file_contents.append({
-                                'name': filename,
-                                'content': content,
-                                'extension': filename.rsplit('.', 1)[1].lower(),
-                                'analysis': analysis
-                            })
+                            # Try enhanced analysis first, fallback to simple format
+                            try:
+                                analyzer = CodeAnalyzer()
+                                if filename.endswith('.py'):
+                                    analysis = analyzer.analyze_python_file(filename, content)
+                                elif filename.endswith(('.js', '.jsx', '.ts', '.tsx')):
+                                    analysis = analyzer.analyze_javascript_file(filename, content)
+                                else:
+                                    analysis = {
+                                        'language': 'unknown',
+                                        'file_path': filename,
+                                        'line_count': len(content.splitlines())
+                                    }
+                                
+                                file_contents.append({
+                                    'name': filename,
+                                    'content': content,
+                                    'extension': filename.rsplit('.', 1)[1].lower(),
+                                    'analysis': analysis
+                                })
+                            except Exception as e:
+                                # Fallback to simple format (compatible with app.py)
+                                file_contents.append({
+                                    'name': filename,
+                                    'content': content,
+                                    'extension': filename.rsplit('.', 1)[1].lower()
+                                })
                     except UnicodeDecodeError:
                         return jsonify({'error': f'Cannot read file {filename}. Please ensure it\'s a text file.'}), 400
         
@@ -766,10 +843,24 @@ def generate_documentation():
             print(f"Error in documentation generation: {str(e)}")
             raise e
         
-        # Calculate metrics
-        total_lines = sum(fc['analysis'].get('line_count', 0) for fc in file_contents)
-        total_functions = sum(len(fc['analysis'].get('functions', [])) for fc in file_contents)
-        total_classes = sum(len(fc['analysis'].get('classes', [])) for fc in file_contents)
+        # Calculate metrics (handle both enhanced and simple formats)
+        total_lines = 0
+        total_functions = 0
+        total_classes = 0
+        languages = set()
+        
+        for fc in file_contents:
+            if 'analysis' in fc:
+                # Enhanced format
+                analysis = fc['analysis']
+                total_lines += analysis.get('line_count', 0)
+                total_functions += len(analysis.get('functions', []))
+                total_classes += len(analysis.get('classes', []))
+                languages.add(analysis.get('language', 'unknown'))
+            else:
+                # Simple format - basic line count
+                total_lines += len(fc['content'].splitlines())
+                languages.add('unknown')
         
         return jsonify({
             'success': True,
@@ -779,7 +870,7 @@ def generate_documentation():
                 'total_lines': total_lines,
                 'total_functions': total_functions,
                 'total_classes': total_classes,
-                'languages': list(set(fc['analysis'].get('language', 'unknown') for fc in file_contents))
+                'languages': list(languages)
             }
         })
     
@@ -821,10 +912,24 @@ def analyze_github():
             print(f"Error in documentation generation: {str(e)}")
             raise e
         
-        # Calculate metrics
-        total_lines = sum(fc['analysis'].get('line_count', 0) for fc in file_contents)
-        total_functions = sum(len(fc['analysis'].get('functions', [])) for fc in file_contents)
-        total_classes = sum(len(fc['analysis'].get('classes', [])) for fc in file_contents)
+        # Calculate metrics (handle both enhanced and simple formats)
+        total_lines = 0
+        total_functions = 0
+        total_classes = 0
+        languages = set()
+        
+        for fc in file_contents:
+            if 'analysis' in fc:
+                # Enhanced format
+                analysis = fc['analysis']
+                total_lines += analysis.get('line_count', 0)
+                total_functions += len(analysis.get('functions', []))
+                total_classes += len(analysis.get('classes', []))
+                languages.add(analysis.get('language', 'unknown'))
+            else:
+                # Simple format - basic line count
+                total_lines += len(fc['content'].splitlines())
+                languages.add('unknown')
         
         return jsonify({
             'success': True,
@@ -835,7 +940,7 @@ def analyze_github():
                 'total_lines': total_lines,
                 'total_functions': total_functions,
                 'total_classes': total_classes,
-                'languages': list(set(fc['analysis'].get('language', 'unknown') for fc in file_contents))
+                'languages': list(languages)
             }
         })
     
@@ -844,8 +949,8 @@ def analyze_github():
 
 def clean_markdown_to_html(text):
     """Convert markdown formatting to proper HTML"""
-    # Convert **text** to <strong>text</strong>
-    text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', text)
+    # Convert **text** to <strong>text</strong> (handle multiple occurrences)
+    text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', text, flags=re.DOTALL)
     
     # Convert *text* to <em>text</em> (but not inside code blocks)
     text = re.sub(r'(?<!`)\*([^*`]+)\*(?!`)', r'<em>\1</em>', text)
@@ -853,6 +958,7 @@ def clean_markdown_to_html(text):
     # Convert `code` to <code>code</code> (but not inside code blocks)
     text = re.sub(r'(?<!`)`([^`]+)`(?!`)', r'<code>\1</code>', text)
     
+    # Additional cleanup for common markdown patterns
     # Convert ### headings to proper HTML
     text = re.sub(r'^### (.*?)$', r'<h3>\1</h3>', text, flags=re.MULTILINE)
     text = re.sub(r'^## (.*?)$', r'<h2>\1</h2>', text, flags=re.MULTILINE)
@@ -928,6 +1034,55 @@ def download_documentation():
             'success': True,
             'documentation': documentation,
             'filename': 'project-documentation.md'
+        })
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/chatbot', methods=['POST'])
+def chatbot():
+    """API endpoint for chatbot functionality"""
+    try:
+        data = request.get_json()
+        question = data.get('question', '').strip()
+        documentation = data.get('documentation', '')
+        
+        if not question:
+            return jsonify({'error': 'No question provided'}), 400
+        
+        if not documentation:
+            return jsonify({'error': 'No documentation context provided'}), 400
+        
+        # Create a prompt for the chatbot
+        chatbot_prompt = f"""
+You are an AI assistant helping developers understand their code project. Based on the following project documentation, please answer the user's question in a CONCISE and helpful way.
+
+Project Documentation:
+{documentation}
+
+User Question: {question}
+
+IMPORTANT INSTRUCTIONS:
+1. Keep your response SHORT and FOCUSED (maximum 3-4 sentences)
+2. Answer directly what the user asked
+3. If referencing code, mention specific function/class names
+4. Use HTML formatting: <strong>bold text</strong> and <em>italic text</em> (NOT markdown **text** or *text*)
+5. If the question is about usage, provide a brief example
+6. If troubleshooting, give a concise solution
+7. Be conversational but professional
+
+Format your response in clean HTML with proper tags like <p>, <strong>, <em>, <code>, <ul>, <li>.
+"""
+        
+        # Call Gemini API for chatbot response
+        response = call_gemini_api(chatbot_prompt)
+        
+        # Clean up any remaining markdown formatting in the response
+        response = clean_markdown_to_html(response)
+        
+        return jsonify({
+            'success': True,
+            'answer': response
         })
     
     except Exception as e:

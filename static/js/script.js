@@ -14,6 +14,23 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', eve
 let selectedFiles = [];
 let generatedDocumentation = '';
 
+// Make generatedDocumentation globally accessible and create a setter
+window.generatedDocumentation = generatedDocumentation;
+
+// Function to update global documentation variable
+function updateGlobalDocumentation(doc) {
+    generatedDocumentation = doc;
+    window.generatedDocumentation = doc;
+}
+
+// Initialize chatbot state when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Disable chatbot initially since no documentation is available yet
+    if (typeof window.disableChatbot === 'function') {
+        window.disableChatbot();
+    }
+});
+
 // HTML to Markdown converter function
 function htmlToMarkdown(html) {
     // Create a temporary div to parse HTML
@@ -422,7 +439,8 @@ async function generateDocumentation() {
 }
 
 function displayDocumentation(documentation) {
-    generatedDocumentation = documentation;
+    updateGlobalDocumentation(documentation);
+    
     const contentDiv = document.getElementById('documentationContent');
     
     // Since we're now getting HTML directly from the server, we can insert it directly
@@ -443,6 +461,16 @@ function displayDocumentation(documentation) {
     
     // Show the output section
     document.getElementById('outputSection').classList.remove('hidden');
+    
+    // Show the chatbot section and enable it
+    if (typeof window.showChatbot === 'function') {
+        window.showChatbot();
+    }
+    
+    // Clear previous chat
+    if (typeof window.clearChat === 'function') {
+        window.clearChat();
+    }
     
     // Scroll to output
     document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
