@@ -11,9 +11,9 @@ The project utilizes a client-server architecture:
 * **Backend:** Flask (Python) with enhanced code analysis using Abstract Syntax Tree (AST) parsing.
 * **Frontend:** HTML, CSS, JavaScript (using Tailwind CSS and Font Awesome).
 * **AI Engine:** Google Gemini API for natural language processing and documentation generation.
-* **Code Analysis:**  AST parsing libraries (`ast` and `astroid` for Python, regex-based analysis for JavaScript/TypeScript).
+* **Code Analysis:** AST parsing libraries (`ast` and `astroid` for Python, regex-based analysis for JavaScript/TypeScript).
 
-The frontend handles user interaction (file uploads, GitHub repository input, documentation display, and chatbot interaction). The backend processes file uploads, clones GitHub repositories, analyzes code, calls the Gemini API, and manages API responses.  The Gemini API generates the documentation based on a carefully crafted prompt incorporating code analysis results.
+The frontend handles user interaction (file uploads, GitHub repository input, documentation display, and chatbot interaction). The backend processes file uploads, clones GitHub repositories, analyzes code, calls the Gemini API, and manages API responses. The Gemini API generates the documentation based on a carefully crafted prompt incorporating code analysis results.
 
 ### Project Structure and Organization
 
@@ -46,29 +46,31 @@ This file provides a basic Flask application for generating documentation using 
 
 #### Key Functions/Classes
 
-* **`allowed_file(filename)`:** Checks if the file extension is supported.  **Parameters:** `filename` (str). **Returns:** `bool`.
-* **`should_ignore_path(path)`:** Checks if a path should be ignored (e.g., `.git`, `node_modules`). **Parameters:** `path` (str). **Returns:** `bool`.
-* **`clone_github_repository(repo_url)`:** Clones a GitHub repository and extracts file contents. **Parameters:** `repo_url` (str). **Returns:** `list` of dictionaries (file name, content, extension). **Exceptions:** Raises exceptions for invalid URLs, cloning failures, and timeouts.
-* **`extract_files_from_zip(zip_file)`:** Extracts files from an uploaded ZIP archive. **Parameters:** `zip_file` (werkzeug.datastructures.FileStorage). **Returns:** `list` of dictionaries (file name, content, extension). **Exceptions:** Raises exceptions for processing errors.
-* **`call_gemini_api(prompt)`:** Calls the Gemini API to generate documentation. **Parameters:** `prompt` (str). **Returns:** `str` (generated documentation). **Exceptions:** Raises exceptions for API request failures.
-* **`clean_markdown_to_html(text)`:** Converts markdown formatting to HTML. **Parameters:** `text` (str). **Returns:** `str` (HTML formatted text).
-* **`create_documentation_prompt(file_contents)`:** Creates the prompt for the Gemini API. **Parameters:** `file_contents` (list). **Returns:** `str` (prompt).
+| Function/Class          | Purpose                                                                     | Parameters                                      | Return Value                                   | Exceptions                                      |
+|--------------------------|-----------------------------------------------------------------------------|-------------------------------------------------|-------------------------------------------------|-------------------------------------------------|
+| `allowed_file(filename)` | Check if file extension is supported                                        | `filename` (str)                              | `bool`                                         | None                                           |
+| `should_ignore_path(path)` | Check if path should be ignored                                             | `path` (str)                                  | `bool`                                         | None                                           |
+| `clone_github_repository(repo_url)` | Clone a GitHub repository and return file contents                      | `repo_url` (str)                             | `list` of dictionaries (file name, content, extension) | Invalid URL, cloning failures, timeouts         |
+| `extract_files_from_zip(zip_file)` | Extract and process files from uploaded ZIP folder                       | `zip_file` (werkzeug.datastructures.FileStorage) | `list` of dictionaries (file name, content, extension) | Processing errors                              |
+| `call_gemini_api(prompt)` | Call Gemini API to generate documentation                                   | `prompt` (str)                                | `str` (generated documentation)                 | API request failures                           |
+| `clean_markdown_to_html(text)` | Convert markdown formatting to proper HTML                               | `text` (str)                                 | `str` (HTML formatted text)                    | None                                           |
+| `create_documentation_prompt(file_contents)` | Create the prompt for documentation generation                         | `file_contents` (list)                        | `str` (prompt)                                 | None                                           |
 
 #### Dependencies
 
-* Flask
-* requests
-* zipfile
-* re
-* subprocess
-* tempfile
-* shutil
-* werkzeug
-* pathlib
+- Flask
+- requests
+- zipfile
+- re
+- subprocess
+- tempfile
+- shutil
+- werkzeug
+- pathlib
 
 #### Usage Examples
 
-The main functionality is accessed through POST requests to `/generate-documentation` and `/analyze-github`.  See the code for detailed examples within the route handlers.
+The main functionality is accessed through POST requests to `/generate-documentation` and `/analyze-github`. See the code for detailed examples within the route handlers.
 
 ### 📄 enhanced_app.py
 
@@ -78,31 +80,36 @@ This file contains the enhanced Flask application, incorporating advanced code a
 
 #### Key Functions/Classes
 
-* **`CodeAnalyzer`:** Analyzes code structure using AST parsing.  Contains methods for Python and JavaScript/TypeScript analysis.
-* **`PythonASTAnalyzer`:**  Extends `ast.NodeVisitor` for detailed Python code analysis (functions, classes, imports).
-* **`is_supported_file(filename)`:** Checks if a file has a supported extension. **Parameters:** `filename` (str). **Returns:** `bool`.
-* **`clone_github_repository(repo_url)`:**  Similar to `app.py`, but includes code analysis.
-* **`extract_files_from_zip(zip_file)`:** Similar to `app.py`, but includes code analysis.
-* **`call_gemini_api(prompt)`:** Calls the Gemini API, handling various response structures for robustness.
-* **`generate_style_guide_prompt(language, style)`:** Generates style guide-specific prompts.
-* **`create_documentation_prompt(file_contents, style_guide)`:** Creates the Gemini API prompt, incorporating AST analysis data.
-* **`clean_markdown_to_html(text)`:** Cleans up markdown formatting and converts it to HTML.
+- **`CodeAnalyzer`:** Analyzes code structure using AST parsing. Contains methods for Python and JavaScript/TypeScript analysis.
+- **`PythonASTAnalyzer`:** Extends `ast.NodeVisitor` for detailed Python code analysis (functions, classes, imports).
+
+##### Key Functions:
+
+| Function/Class          | Purpose                                                                                             | Parameters                                                              | Return Value                                                                   | Exceptions                                                              |
+|--------------------------|------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|-----------------------------------------------------------------------------------|---------------------------------------------------------------------------|
+| `is_supported_file(filename)` | Check if a file has a supported extension.                                                        | `filename` (str)                                                          | `bool`                                                                        | None                                                                   |
+| `clone_github_repository(repo_url)` | Clone a GitHub repository and return file contents, including code analysis.                     | `repo_url` (str)                                                        | `list` of dictionaries (file name, content, extension, analysis)             | Invalid URL, cloning failures, timeouts                                     |
+| `extract_files_from_zip(zip_file)` | Extract files from an uploaded ZIP archive, including code analysis.                               | `zip_file` (werkzeug.datastructures.FileStorage)                         | `list` of dictionaries (file name, content, extension, analysis)             | Processing errors                                                          |
+| `call_gemini_api(prompt)` | Call Gemini API to generate documentation, handling various response structures for robustness.     | `prompt` (str)                                                            | `str` (generated documentation)                                             | API request failures                                                      |
+| `generate_style_guide_prompt(language, style)` | Generate style guide-specific prompts.                                                            | `language` (str), `style` (str)                                          | `str` (style guide prompt)                                                  | None                                                                   |
+| `create_documentation_prompt(file_contents, style_guide)` | Create the Gemini API prompt, incorporating AST analysis data.                                      | `file_contents` (list), `style_guide` (str)                             | `str` (prompt)                                                                | None                                                                   |
+| `clean_markdown_to_html(text)` | Cleans up markdown formatting and converts it to HTML.                                             | `text` (str)                                                             | `str` (HTML formatted text)                                                | None                                                                   |
 
 #### Dependencies
 
-* Flask
-* requests
-* zipfile
-* re
-* ast
-* astroid
-* subprocess
-* tempfile
-* shutil
-* pathlib
-* werkzeug
-* typing
-* yaml
+- Flask
+- requests
+- zipfile
+- re
+- ast
+- astroid
+- subprocess
+- tempfile
+- shutil
+- pathlib
+- werkzeug
+- typing
+- yaml
 
 #### Usage Examples
 
@@ -116,13 +123,15 @@ This YAML file configures various settings for the Code Auto-Documenter, includi
 
 #### Key Settings
 
-* `style_guide`: Specifies the documentation style guide (e.g., 'google', 'numpy', 'sphinx', 'jsdoc').
-* `output`: Defines output settings (format, directory, filename).
-* `analysis`: Configures code analysis settings (languages, ignore patterns, ignore directories).
-* `api`: Contains Gemini API key, timeout, and model configuration.
-* `templates`:  Provides custom prompt templates for different project types.
-* `quality`: Sets quality control parameters (minimum coverage, hallucination checks, code validation).
-* `git`: Configures Git integration (hooks, pre-commit checks, CI/CD).
+The `config.yaml` file uses a hierarchical structure to organize settings.  Key sections include:
+
+- `style_guide`:  Specifies the documentation style guide (e.g., 'google', 'numpy', 'sphinx', 'jsdoc').
+- `output`: Defines output settings (format, directory, filename).
+- `analysis`: Configures code analysis settings (languages, ignore patterns, ignore directories).
+- `api`: Contains Gemini API key, timeout, and model configuration.
+- `templates`: Provides custom prompt templates for different project types.
+- `quality`: Sets quality control parameters (minimum coverage, hallucination checks, code validation).
+- `git`: Configures Git integration (hooks, pre-commit checks, CI/CD).
 
 ### 📄 CHATBOT_FEATURE.md
 
@@ -132,9 +141,9 @@ This markdown file documents the AI-powered chatbot feature, explaining its func
 
 #### Key Features
 
-* AI-powered Q&A about generated documentation.
-* Interactive chat interface with dark mode support.
-* User-friendly design with color-coded messages and syntax highlighting.
+- AI-powered Q&A about generated documentation.
+- Interactive chat interface with dark mode support.
+- User-friendly design with color-coded messages and syntax highlighting.
 
 ### 📄 README.md
 
@@ -146,33 +155,33 @@ This file provides a high-level overview of the project, including its purpose, 
 
 #### Purpose and Overview
 
-This CSS file styles the web application, including file upload sections, progress bars, documentation display, chatbot interface, and fullscreen mode. It also supports dark mode.
+This CSS file styles the web application, including file upload sections, progress bars, documentation display, chatbot interface, and fullscreen mode. It also supports dark mode.  The styles are extensively commented within the file itself.
 
 ### 📄 static/js/chatbot.js
 
 #### Purpose and Overview
 
-This JavaScript file implements the chatbot's frontend functionality, handling user input, sending requests to the backend, receiving and displaying responses, and managing chatbot visibility.
+This JavaScript file implements the chatbot's frontend functionality, handling user input, sending requests to the backend, receiving and displaying responses, and managing chatbot visibility.  The code is well-commented and uses modern JavaScript features.
 
 ### 📄 static/js/script.js
 
 #### Purpose and Overview
 
-This JavaScript file manages the main frontend logic, including file uploads, display of file lists, documentation generation requests, display of generated documentation, copy and download functionality, and fullscreen mode.  It also includes a function to convert HTML to Markdown.
+This JavaScript file manages the main frontend logic, including file uploads, display of file lists, documentation generation requests, display of generated documentation, copy and download functionality, and fullscreen mode. It also includes a function to convert HTML to Markdown.  The code is modular and well-organized.
 
 ### 📄 templates/index.html
 
 #### Purpose and Overview
 
-This HTML file provides the main user interface for the Code Auto-Documenter web application.  It uses Tailwind CSS for styling and includes sections for file uploads, progress display, documentation output, and the chatbot.
+This HTML file provides the main user interface for the Code Auto-Documenter web application. It uses Tailwind CSS for styling and includes sections for file uploads, progress display, documentation output, and the chatbot.  The HTML is well-structured and uses semantic elements.
 
 ## 🚀 Setup and Installation
 
 ### Prerequisites
 
-* Python 3.7+
-* Node.js and npm (optional, for frontend development)
-* A Google Cloud Platform (GCP) project with the Gemini API enabled and a valid API key.  The API key should be set as the environment variable `GEMINI_API_KEY` or within the `config.yaml` file.
+- Python 3.7+
+- Node.js and npm (optional, for frontend development)
+- A Google Cloud Platform (GCP) project with the Gemini API enabled and a valid API key. The API key should be set as the environment variable `GEMINI_API_KEY` or within the `config.yaml` file.
 
 ### Installation Steps
 
@@ -195,16 +204,16 @@ After documentation generation, you can copy the HTML or Markdown content, downl
 
 The main API endpoints are:
 
-* **`POST /generate-documentation`:** Generates documentation from uploaded files.  Accepts files via multipart/form-data and a `style_guide` parameter. Returns JSON with documentation, success status, and metrics.
-* **`POST /analyze-github`:** Generates documentation from a GitHub repository URL. Accepts JSON with `repo_url` and `style_guide`. Returns JSON with documentation, success status, repository URL, and metrics.
-* **`POST /download-documentation`:** Downloads the generated documentation as a Markdown file. Accepts JSON with `documentation`. Returns JSON with documentation and filename.
-* **`POST /chatbot`:**  Provides chatbot functionality. Accepts JSON with `question` and `documentation`. Returns JSON with the chatbot's answer.
+- **`POST /generate-documentation`:** Generates documentation from uploaded files. Accepts files via multipart/form-data and a `style_guide` parameter. Returns JSON with documentation, success status, and metrics.
+- **`POST /analyze-github`:** Generates documentation from a GitHub repository URL. Accepts JSON with `repo_url` and `style_guide`. Returns JSON with documentation, success status, repository URL, and metrics.
+- **`POST /download-documentation`:** Downloads the generated documentation as a Markdown file. Accepts JSON with `documentation`. Returns JSON with documentation and filename.
+- **`POST /chatbot`:** Provides chatbot functionality. Accepts JSON with `question` and `documentation`. Returns JSON with the chatbot's answer.
 
 Detailed API documentation for each endpoint is available within the comments of the respective functions in `enhanced_app.py`.
 
 ## 🤝 Contributing Guidelines
 
-Contributions are welcome!  Please follow these guidelines:
+Contributions are welcome! Please follow these guidelines:
 
 1. Fork the repository.
 2. Create a new branch for your feature or bug fix.
@@ -213,4 +222,4 @@ Contributions are welcome!  Please follow these guidelines:
 5. Write unit tests for your code changes.
 6. Submit a pull request with a detailed description of your changes.
 
-Testing is crucial.  Unit tests should be added to ensure the correctness of any code changes.  The project should aim for high test coverage.
+Testing is crucial. Unit tests should be added to ensure the correctness of any code changes. The project should aim for high test coverage.
