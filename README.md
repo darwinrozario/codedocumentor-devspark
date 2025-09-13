@@ -23,7 +23,7 @@ ul { list-style-type: disc; padding-left: 20px; }
 
 ## 📋 Project Overview
 
-The Code Auto-Documenter is a web application designed to automatically generate comprehensive documentation for software projects.  It leverages the Google Gemini API to analyze code and produce well-structured HTML documentation. The project aims to streamline the documentation process, improving code maintainability and collaboration.
+The Code Auto-Documenter is a web application designed to automatically generate comprehensive documentation for software projects. It leverages the Google Gemini API to analyze code and produce well-structured HTML documentation. The project aims to streamline the documentation process, improving code maintainability and collaboration.
 
 ### Technology Stack and Architecture
 
@@ -33,7 +33,7 @@ The project uses the following technologies:
 - **Backend:** Flask (Python)</li>
 <li>**Frontend:** HTML, CSS, JavaScript</li>
 <li>**AI Engine:** Google Gemini API</li>
-<li>**Code Analysis:**  Abstract Syntax Tree (AST) parsing (Python)
+<li>**Code Analysis:** Abstract Syntax Tree (AST) parsing (Python)
 
 </ul>
 The architecture is a client-server model. The frontend handles user interaction (file uploads, GitHub repository input, documentation display, and chatbot interaction). The backend processes file uploads, clones GitHub repositories, analyzes code using AST parsing, calls the Gemini API for documentation generation, and handles API responses. The Gemini API is responsible for natural language processing and documentation generation.
@@ -60,7 +60,7 @@ The project is organized as follows:
 
 #### Purpose and Overview
 
-This file contains the initial implementation of the Flask web application. It provides basic functionality for uploading code files, generating documentation using the Gemini API, and handling user requests.  It lacks the advanced code analysis features present in `enhanced_app.py`.
+This file contains the initial implementation of the Flask web application. It provides basic functionality for uploading code files, generating documentation using the Gemini API, and handling user requests. It lacks the advanced code analysis features present in `enhanced_app.py`.
 
 #### Key Functions/Classes
 
@@ -90,7 +90,7 @@ This file contains the initial implementation of the Flask web application. It p
 </ul>
 #### Usage Examples
 
-See the Flask routes (`@app.route` decorators) within the file for usage examples.  The main functionality is accessed through POST requests to `/generate-documentation` and `/analyze-github`.
+See the Flask routes (@app.route decorators) within the file for usage examples. The main functionality is accessed through POST requests to `/generate-documentation` and `/analyze-github`.
 
 #### Code Comments
 
@@ -104,7 +104,7 @@ See inline comments within the functions for parameter, return value, and except
 
 #### Purpose and Overview
 
-This markdown file provides documentation for the AI-powered chatbot feature added to the Code Auto-Documenter.  It describes the feature's capabilities, usage instructions, technical implementation details, and API endpoints.
+This markdown file provides documentation for the AI-powered chatbot feature added to the Code Auto-Documenter. It describes the feature's capabilities, usage instructions, technical implementation details, and API endpoints.
 
 #### Key Functions/Classes (Not Applicable)
 
@@ -140,7 +140,7 @@ This YAML file contains the configuration settings for the Code Auto-Documenter.
 
 #### Purpose and Overview
 
-This file contains an enhanced version of the Flask application. It builds upon `app.py` by incorporating advanced code analysis using Abstract Syntax Tree (AST) parsing. This allows for more detailed extraction of code structure information (functions, classes, imports) before generating documentation, resulting in more accurate and comprehensive output.  It also includes improved error handling and logging.
+This file contains an enhanced version of the Flask application. It builds upon `app.py` by incorporating advanced code analysis using Abstract Syntax Tree (AST) parsing. This allows for more detailed extraction of code structure information (functions, classes, imports) before generating documentation, resulting in more accurate and comprehensive output. It also includes improved error handling and logging.
 
 #### Key Functions/Classes
 
@@ -176,11 +176,11 @@ This file contains an enhanced version of the Flask application. It builds upon 
 </ul>
 #### Usage Examples
 
-Similar to `app.py`, the main functionality is accessed through POST requests to `/generate-documentation` and `/analyze-github`.  The `style_guide` parameter can be used to specify a documentation style (e.g., 'google', 'numpy').
+Similar to `app.py`, the main functionality is accessed through POST requests to `/generate-documentation` and `/analyze-github`. The `style_guide` parameter can be used to specify a documentation style (e.g., 'google', 'numpy').
 
 #### Code Comments
 
-The code includes extensive comments explaining the purpose of functions, classes, and complex logic.  There are also debug print statements for API responses and analysis data.
+The code includes extensive comments explaining the purpose of functions, classes, and complex logic. There are also debug print statements for API responses and analysis data.
 
 #### API Documentation
 
@@ -190,7 +190,7 @@ See inline comments within the functions for parameter, return value, and except
 
 #### Purpose and Overview
 
-A simple README file listing the team members.
+This file provides a high-level overview of the project, including its purpose, architecture, and usage instructions.  It also links to more detailed documentation for individual files and features.
 
 #### Key Functions/Classes (Not Applicable)
 
@@ -206,7 +206,7 @@ A simple README file listing the team members.
 
 #### Purpose and Overview
 
-This CSS file provides styling for the Code Auto-Documenter web application. It includes styles for various elements, including the file upload section, progress bar, documentation content, chatbot interface, and fullscreen mode.  It also incorporates dark mode support.
+This CSS file provides styling for the Code Auto-Documenter web application. It includes styles for various elements, including the file upload section, progress bar, documentation content, chatbot interface, and fullscreen mode. It also incorporates dark mode support.
 
 #### Key Functions/Classes (Not Applicable)
 
@@ -230,7 +230,7 @@ This JavaScript file implements the chatbot functionality. It handles user input
 
 #### Usage Examples
 
-The file is designed to be integrated into an HTML page.  It uses DOM manipulation to interact with the chatbot elements.
+The file is designed to be integrated into an HTML page. It uses DOM manipulation to interact with the chatbot elements.
 
 #### Code Comments
 
@@ -250,7 +250,7 @@ This JavaScript file handles the main frontend logic of the Code Auto-Documenter
 
 #### Usage Examples
 
-The file is designed to be integrated into an HTML page.  It uses DOM manipulation, event listeners, and asynchronous requests to interact with the backend.
+The file is designed to be integrated into an HTML page. It uses DOM manipulation, event listeners, and asynchronous requests to interact with the backend.
 
 #### Code Comments
 
@@ -283,7 +283,7 @@ This HTML file serves as the main template for the Code Auto-Documenter web appl
 
 ## 🚀 Setup and Installation
 
-**Prerequisites:**
+### Prerequisites
 
 <ul>
 - Python 3.7+</li>
@@ -291,19 +291,19 @@ This HTML file serves as the main template for the Code Auto-Documenter web appl
 <li>A Google Cloud Platform (GCP) project with the Gemini API enabled and a valid API key.
 
 </ul>
-**Installation Steps:**
+### Installation Steps
 
 <ol>
-- Clone the repository: `git clone <repository_url>`</li>
+- Clone the repository: `git clone &lt;repository_url&gt;`</li>
 <li>Install Python dependencies: `pip install -r requirements.txt`</li>
 <li>Set the `GEMINI_API_KEY` environment variable with your API key.</li>
 <li>(Optional) Install Node.js and npm and run `npm install` to install frontend dependencies.</li>
 <li>Run the Flask application: `python enhanced_app.py`
 
 </ol>
-**Configuration Requirements:**
+### Configuration Requirements
 
-The `config.yaml` file can be used to customize various settings.  The Gemini API key is crucial for the application to function.  Ensure that the API key is correctly configured either in the `config.yaml` file or as an environment variable.
+The `config.yaml` file can be used to customize various settings. The Gemini API key is crucial for the application to function. Ensure that the API key is correctly configured either in the `config.yaml` file or as an environment variable.
 
 ## 💻 Usage Examples
 
@@ -342,7 +342,7 @@ Contributions are welcome! Please follow these guidelines:
 <li>Submit a pull request with a detailed description of your changes.
 
 </ul>
-Testing is crucial.  Unit tests should be added to ensure the correctness of any code changes.
+Testing is crucial. Unit tests should be added to ensure the correctness of any code changes.
 
 </body>
 </html>
